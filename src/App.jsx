@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import * as XLSX from 'xlsx';
 
+// Testing auto-deploy from GitHub to Netlify
 export default function App() {
   const [people, setPeople] = useState(() => {
     const saved = localStorage.getItem('purchaseTrackerData');
