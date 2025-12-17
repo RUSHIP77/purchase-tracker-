@@ -13,8 +13,8 @@ export default function App() {
         name: 'Sarah',
         expanded: true,
         products: [
-          { id: 1, name: 'Laptop Stand', price: 45, links: ['https://amazon.com/...'], subProducts: [], expanded: true },
-          { id: 2, name: 'USB Hub', price: 29, links: [], subProducts: [], expanded: true },
+          { id: 1, name: 'Laptop Stand', price: 45, links: ['https://amazon.com/...'] },
+          { id: 2, name: 'USB Hub', price: 29, links: [] },
         ]
       }
     ];
@@ -53,29 +53,14 @@ export default function App() {
     ));
   };
 
-  // Recursive helper to calculate product price including all sub-products
-  const calculateProductTotal = (product) => {
-    let total = product.price * 1.1;
-    if (product.subProducts && product.subProducts.length > 0) {
-      product.subProducts.forEach(subProduct => {
-        total += calculateProductTotal(subProduct);
-      });
-    }
-    return total;
-  };
-
   const calculateTotal = () => {
     return people.reduce((total, person) => {
-      return total + person.products.reduce((sum, product) => {
-        return sum + calculateProductTotal(product);
-      }, 0);
+      return total + person.products.reduce((sum, product) => sum + product.price * 1.1, 0);
     }, 0);
   };
 
   const getPersonTotal = (person) => {
-    return person.products.reduce((sum, product) => {
-      return sum + calculateProductTotal(product);
-    }, 0);
+    return person.products.reduce((sum, product) => sum + product.price * 1.1, 0);
   };
 
   // PERSON CRUD
@@ -137,9 +122,7 @@ export default function App() {
       id: Date.now(),
       name: newProductName.trim(),
       price: 0,
-      links: [],
-      subProducts: [],
-      expanded: true
+      links: []
     };
     setPeople(people.map(p => 
       p.id === personId 
@@ -175,149 +158,6 @@ export default function App() {
             )
           }
         : p
-    ));
-  };
-
-  // SUB-PRODUCT MANAGEMENT
-  // Recursive helper to find and update a product or sub-product
-  const updateProductRecursive = (products, productId, updater) => {
-    return products.map(product => {
-      if (product.id === productId) {
-        return updater(product);
-      }
-      if (product.subProducts && product.subProducts.length > 0) {
-        return {
-          ...product,
-          subProducts: updateProductRecursive(product.subProducts, productId, updater)
-        };
-      }
-      return product;
-    });
-  };
-
-  const toggleProduct = (personId, productId) => {
-    setPeople(people.map(p => 
-      p.id === personId 
-        ? { 
-            ...p, 
-            products: updateProductRecursive(p.products, productId, (product) => ({
-              ...product,
-              expanded: !product.expanded
-            }))
-          }
-        : p
-    ));
-  };
-
-  const addSubProduct = (personId, parentProductId) => {
-    const subProductName = prompt('Enter sub-product name:');
-    if (!subProductName || !subProductName.trim()) return;
-
-    const newSubProduct = {
-      id: Date.now(),
-      name: subProductName.trim(),
-      price: 0,
-      links: [],
-      subProducts: [],
-      expanded: true
-    };
-
-    setPeople(people.map(p => 
-      p.id === personId 
-        ? { 
-            ...p, 
-            products: updateProductRecursive(p.products, parentProductId, (product) => ({
-              ...product,
-              subProducts: [...product.subProducts, newSubProduct],
-              expanded: true // Auto-expand parent when adding sub-product
-            }))
-          }
-        : p
-    ));
-  };
-
-  const deleteSubProduct = (personId, parentProductId, subProductId) => {
-    setPeople(people.map(p => 
-      p.id === personId 
-        ? { 
-            ...p, 
-            products: updateProductRecursive(p.products, parentProductId, (product) => ({
-              ...product,
-              subProducts: product.subProducts.filter(sub => sub.id !== subProductId)
-            }))
-          }
-        : p
-    ));
-  };
-
-  const updateSubProduct = (personId, parentProductId, subProductId, field, value) => {
-    setPeople(people.map(p => 
-      p.id === personId 
-        ? { 
-            ...p, 
-            products: updateProductRecursive(p.products, parentProductId, (product) => ({
-              ...product,
-              subProducts: updateProductRecursive(product.subProducts, subProductId, (subProduct) => ({
-                ...subProduct,
-                [field]: field === 'price' ? parseFloat(value) || 0 : value
-              }))
-            }))
-          }
-        : p
-    ));
-  };
-
-  const addSubProductLink = (personId, parentProductId, subProductId) => {
-    const link = prompt('Enter link URL:');
-    if (link && link.trim()) {
-      setPeople(people.map(p => 
-        p.id === personId 
-          ? { 
-              ...p, 
-              products: updateProductRecursive(p.products, parentProductId, (product) => ({
-                ...product,
-                subProducts: updateProductRecursive(product.subProducts, subProductId, (subProduct) => ({
-                  ...subProduct,
-                  links: [...subProduct.links, link.trim()]
-                }))
-              }))
-            }
-          : p
-      ));
-    }
-  };
-
-  const deleteSubProductLink = (personId, parentProductId, subProductId, linkIndex) => {
-    setPeople(people.map(p => 
-      p.id === personId 
-        ? { 
-              ...p, 
-              products: updateProductRecursive(p.products, parentProductId, (product) => ({
-                ...product,
-                subProducts: updateProductRecursive(product.subProducts, subProductId, (subProduct) => ({
-                  ...subProduct,
-                  links: subProduct.links.filter((_, i) => i !== linkIndex)
-                }))
-              }))
-            }
-          : p
-    ));
-  };
-
-  const updateSubProductLink = (personId, parentProductId, subProductId, linkIndex, newLink) => {
-    setPeople(people.map(p => 
-      p.id === personId 
-        ? { 
-              ...p, 
-              products: updateProductRecursive(p.products, parentProductId, (product) => ({
-                ...product,
-                subProducts: updateProductRecursive(product.subProducts, subProductId, (subProduct) => ({
-                  ...subProduct,
-                  links: subProduct.links.map((link, i) => i === linkIndex ? newLink : link)
-                }))
-              }))
-            }
-          : p
     ));
   };
 
@@ -377,24 +217,6 @@ export default function App() {
   const exportAllToExcel = () => {
     const data = [];
     
-    // Recursive helper to add product and sub-products
-    const addProductRows = (product, indent = '') => {
-      data.push({
-        'Name': '',
-        'Product': indent + product.name,
-        'Price': product.price.toFixed(2),
-        'With Tax (10%)': (product.price * 1.1).toFixed(2),
-        'Links': product.links.join(' | ')
-      });
-      
-      // Add sub-products with increased indentation
-      if (product.subProducts && product.subProducts.length > 0) {
-        product.subProducts.forEach(subProduct => {
-          addProductRows(subProduct, indent + '  ');
-        });
-      }
-    };
-    
     people.forEach(person => {
       data.push({
         'Name': person.name,
@@ -405,7 +227,13 @@ export default function App() {
       });
       
       person.products.forEach(product => {
-        addProductRows(product);
+        data.push({
+          'Name': '',
+          'Product': product.name,
+          'Price': product.price.toFixed(2),
+          'With Tax (10%)': (product.price * 1.1).toFixed(2),
+          'Links': product.links.join(' | ')
+        });
       });
       
       data.push({
@@ -453,23 +281,6 @@ export default function App() {
   const exportPersonToExcel = (person) => {
     const data = [];
     
-    // Recursive helper to add product and sub-products
-    const addProductRows = (product, indent = '') => {
-      data.push({
-        'Product': indent + product.name,
-        'Price': product.price.toFixed(2),
-        'With Tax (10%)': (product.price * 1.1).toFixed(2),
-        'Links': product.links.join(' | ')
-      });
-      
-      // Add sub-products with increased indentation
-      if (product.subProducts && product.subProducts.length > 0) {
-        product.subProducts.forEach(subProduct => {
-          addProductRows(subProduct, indent + '  ');
-        });
-      }
-    };
-    
     data.push({
       'Product': `${person.name}'s Purchases`,
       'Price': '',
@@ -492,7 +303,12 @@ export default function App() {
     });
     
     person.products.forEach(product => {
-      addProductRows(product);
+      data.push({
+        'Product': product.name,
+        'Price': product.price.toFixed(2),
+        'With Tax (10%)': (product.price * 1.1).toFixed(2),
+        'Links': product.links.join(' | ')
+      });
     });
     
     data.push({
@@ -523,355 +339,6 @@ export default function App() {
     XLSX.writeFile(wb, `purchase-tracker-${person.name.toLowerCase()}.xlsx`);
     setExportModal(false);
     setMobileMenuOpen(false);
-  };
-
-  // Render product row for desktop table (recursive)
-  const renderProductRow = (person, product, level = 0) => {
-    const indent = level * 20; // Pixels of indentation per level
-    const isSubProduct = level > 0;
-
-    return (
-      <React.Fragment key={product.id}>
-        <tr className={`border-t border-gray-50 group ${isSubProduct ? 'bg-gray-50/50' : ''}`}>
-          {/* Product Name with hierarchy */}
-          <td className="px-4 py-3 align-top">
-            <div className="flex items-center gap-1" style={{ marginLeft: `${indent}px` }}>
-              {product.subProducts && product.subProducts.length > 0 && (
-                <button
-                  onClick={() => toggleProduct(person.id, product.id)}
-                  className={`text-gray-400 hover:text-gray-600 transform transition-transform flex-shrink-0 text-xs ${product.expanded ? 'rotate-90' : ''}`}
-                >
-                  ›
-                </button>
-              )}
-              {editingProduct === `${person.id}-${product.id}-name` ? (
-                <input
-                  type="text"
-                  defaultValue={product.name}
-                  onBlur={(e) => {
-                    if (isSubProduct) {
-                      // Find parent ID - this is simplified, in real implementation need proper parent tracking
-                      updateSubProduct(person.id, product.parentId, product.id, 'name', e.target.value);
-                    } else {
-                      updateProduct(person.id, product.id, 'name', e.target.value);
-                    }
-                    setEditingProduct(null);
-                  }}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      if (isSubProduct) {
-                        updateSubProduct(person.id, product.parentId, product.id, 'name', e.target.value);
-                      } else {
-                        updateProduct(person.id, product.id, 'name', e.target.value);
-                      }
-                      setEditingProduct(null);
-                    }
-                  }}
-                  className="flex-1 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:border-gray-500"
-                  autoFocus
-                />
-              ) : (
-                <span 
-                  className={`${isSubProduct ? 'text-gray-600 text-sm' : 'text-gray-700 font-medium'} cursor-pointer hover:text-gray-900`}
-                  onClick={() => setEditingProduct(`${person.id}-${product.id}-name`)}
-                  title="Click to edit"
-                >
-                  {product.name}
-                </span>
-              )}
-              {!isSubProduct && (
-                <button
-                  onClick={() => addSubProduct(person.id, product.id)}
-                  className="ml-1 text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                  title="Add sub-product"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                </button>
-              )}
-            </div>
-          </td>
-          
-          {/* Price */}
-          <td className="px-4 py-3 text-right align-top">
-            {editingProduct === `${person.id}-${product.id}-price` ? (
-              <input
-                type="number"
-                defaultValue={product.price}
-                onBlur={(e) => {
-                  if (isSubProduct) {
-                    updateSubProduct(person.id, product.parentId, product.id, 'price', e.target.value);
-                  } else {
-                    updateProduct(person.id, product.id, 'price', e.target.value);
-                  }
-                  setEditingProduct(null);
-                }}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    if (isSubProduct) {
-                      updateSubProduct(person.id, product.parentId, product.id, 'price', e.target.value);
-                    } else {
-                      updateProduct(person.id, product.id, 'price', e.target.value);
-                    }
-                    setEditingProduct(null);
-                  }
-                }}
-                className="w-20 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:border-gray-500 text-right"
-                autoFocus
-              />
-            ) : (
-              <span 
-                className={`${isSubProduct ? 'text-gray-500 text-sm' : 'text-gray-400'} cursor-pointer hover:text-gray-600`}
-                onClick={() => setEditingProduct(`${person.id}-${product.id}-price`)}
-                title="Click to edit"
-              >
-                ${product.price.toFixed(2)}
-              </span>
-            )}
-          </td>
-          
-          {/* With Tax */}
-          <td className={`px-4 py-3 text-right align-top ${isSubProduct ? 'text-gray-500 text-sm' : 'text-gray-600 font-medium'}`}>
-            ${(product.price * 1.1).toFixed(2)}
-          </td>
-          
-          {/* Links */}
-          <td className="px-4 py-3 align-top">
-            <div className="group/links">
-              {product.links.length > 0 ? (
-                <div className="flex flex-col gap-1">
-                  {product.links.map((link, index) => (
-                    <div key={index} className="flex items-center gap-1 group/link">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-gray-800 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                      </svg>
-                      <a 
-                        href={link} 
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-gray-500 hover:text-gray-700 hover:underline text-xs truncate max-w-32"
-                      >
-                        {link.replace(/^https?:\/\//, '').substring(0, 15)}{link.replace(/^https?:\/\//, '').length > 15 ? '...' : ''}
-                      </a>
-                      <button
-                        onClick={() => deleteLink(person.id, product.id, index)}
-                        className="text-gray-400 hover:text-red-500 opacity-0 group-hover/link:opacity-100 text-xs"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : null}
-              <button
-                onClick={() => isSubProduct ? addSubProductLink(person.id, product.parentId, product.id) : addLink(person.id, product.id)}
-                className="text-gray-400 hover:text-gray-600 opacity-0 group-hover/links:opacity-100 transition-opacity mt-1"
-                title="Add link"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-              </button>
-            </div>
-          </td>
-          
-          {/* Delete */}
-          <td className="px-4 py-3 text-right align-top">
-            <button
-              onClick={() => isSubProduct ? deleteSubProduct(person.id, product.parentId, product.id) : deleteProduct(person.id, product.id)}
-              className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-500"
-              title="Delete"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
-          </td>
-        </tr>
-        
-        {/* Render sub-products recursively */}
-        {product.expanded && product.subProducts && product.subProducts.map(subProduct => 
-          renderProductRow(person, { ...subProduct, parentId: product.id }, level + 1)
-        )}
-      </React.Fragment>
-    );
-  };
-
-  // Render product card for mobile (recursive)
-  const renderProductCard = (person, product, level = 0) => {
-    const indent = level * 16; // Pixels of indentation per level
-    const isSubProduct = level > 0;
-
-    return (
-      <React.Fragment key={product.id}>
-        <div 
-          className={`border-t border-gray-100 p-3 group ${isSubProduct ? 'bg-gray-50/70' : ''}`}
-          style={{ marginLeft: `${indent}px` }}
-        >
-          <div className="flex justify-between items-start mb-2">
-            <div className="flex items-center gap-1.5 flex-1 min-w-0">
-              {product.subProducts && product.subProducts.length > 0 && (
-                <button
-                  onClick={() => toggleProduct(person.id, product.id)}
-                  className={`text-gray-400 hover:text-gray-600 transform transition-transform flex-shrink-0 text-sm ${product.expanded ? 'rotate-90' : ''}`}
-                >
-                  ›
-                </button>
-              )}
-              {editingProduct === `${person.id}-${product.id}-name` ? (
-                <input
-                  type="text"
-                  defaultValue={product.name}
-                  onBlur={(e) => {
-                    if (isSubProduct) {
-                      updateSubProduct(person.id, product.parentId, product.id, 'name', e.target.value);
-                    } else {
-                      updateProduct(person.id, product.id, 'name', e.target.value);
-                    }
-                    setEditingProduct(null);
-                  }}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      if (isSubProduct) {
-                        updateSubProduct(person.id, product.parentId, product.id, 'name', e.target.value);
-                      } else {
-                        updateProduct(person.id, product.id, 'name', e.target.value);
-                      }
-                      setEditingProduct(null);
-                    }
-                  }}
-                  className="flex-1 px-2 py-2 border border-gray-300 rounded focus:outline-none focus:border-gray-500 text-base"
-                  autoFocus
-                />
-              ) : (
-                <span 
-                  className={`${isSubProduct ? 'text-gray-600 text-sm' : 'text-gray-700 font-medium text-base'} cursor-pointer hover:text-gray-900 flex-1`}
-                  onClick={() => setEditingProduct(`${person.id}-${product.id}-name`)}
-                >
-                  {product.name}
-                </span>
-              )}
-            </div>
-            
-            {/* Action buttons */}
-            <div className="flex items-center gap-1 flex-shrink-0">
-              {!isSubProduct && (
-                <button
-                  onClick={() => addSubProduct(person.id, product.id)}
-                  className="text-gray-400 hover:text-gray-600 p-1"
-                  title="Add sub-product"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                </button>
-              )}
-              <button
-                onClick={() => isSubProduct ? deleteSubProduct(person.id, product.parentId, product.id) : deleteProduct(person.id, product.id)}
-                className="text-gray-400 hover:text-red-500 p-2 -mr-2"
-                title="Delete"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
-            </div>
-          </div>
-          
-          {/* Price Row */}
-          <div className="flex justify-between items-center mb-2">
-            <div className="flex items-center gap-4">
-              <div>
-                <span className="text-xs text-gray-400 block">Price</span>
-                {editingProduct === `${person.id}-${product.id}-price` ? (
-                  <input
-                    type="number"
-                    defaultValue={product.price}
-                    onBlur={(e) => {
-                      if (isSubProduct) {
-                        updateSubProduct(person.id, product.parentId, product.id, 'price', e.target.value);
-                      } else {
-                        updateProduct(person.id, product.id, 'price', e.target.value);
-                      }
-                      setEditingProduct(null);
-                    }}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        if (isSubProduct) {
-                          updateSubProduct(person.id, product.parentId, product.id, 'price', e.target.value);
-                        } else {
-                          updateProduct(person.id, product.id, 'price', e.target.value);
-                        }
-                        setEditingProduct(null);
-                      }
-                    }}
-                    className="w-20 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:border-gray-500 text-base"
-                    autoFocus
-                  />
-                ) : (
-                  <span 
-                    className={`${isSubProduct ? 'text-gray-500 text-sm' : 'text-gray-600 text-base'} cursor-pointer hover:text-gray-800`}
-                    onClick={() => setEditingProduct(`${person.id}-${product.id}-price`)}
-                  >
-                    ${product.price.toFixed(2)}
-                  </span>
-                )}
-              </div>
-              <div>
-                <span className="text-xs text-gray-400 block">With Tax</span>
-                <span className={`${isSubProduct ? 'text-gray-600 text-sm' : 'text-gray-700 font-medium text-base'}`}>
-                  ${(product.price * 1.1).toFixed(2)}
-                </span>
-              </div>
-            </div>
-          </div>
-          
-          {/* Links */}
-          <div>
-            {product.links.length > 0 && (
-              <div className="flex flex-col gap-2 mb-2">
-                {product.links.map((link, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-gray-800 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                    </svg>
-                    <a 
-                      href={link} 
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-gray-500 hover:text-gray-700 hover:underline text-sm truncate"
-                    >
-                      {link.replace(/^https?:\/\//, '').substring(0, 25)}{link.replace(/^https?:\/\//, '').length > 25 ? '...' : ''}
-                    </a>
-                    <button
-                      onClick={() => isSubProduct ? deleteSubProductLink(person.id, product.parentId, product.id, index) : deleteLink(person.id, product.id, index)}
-                      className="text-gray-400 hover:text-red-500 p-1 flex-shrink-0"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-            <button
-              onClick={() => isSubProduct ? addSubProductLink(person.id, product.parentId, product.id) : addLink(person.id, product.id)}
-              className="text-gray-400 hover:text-gray-600 flex items-center gap-1 text-sm py-1"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              Add link
-            </button>
-          </div>
-        </div>
-        
-        {/* Render sub-products recursively */}
-        {product.expanded && product.subProducts && product.subProducts.map(subProduct => 
-          renderProductCard(person, { ...subProduct, parentId: product.id }, level + 1)
-        )}
-      </React.Fragment>
-    );
   };
 
   return (
@@ -941,7 +408,7 @@ export default function App() {
             )}
           </div>
         </div>
-        <p className="text-xs sm:text-sm text-gray-400 mb-6 sm:mb-8">Track purchases for multiple people with hierarchical products</p>
+        <p className="text-xs sm:text-sm text-gray-400 mb-6 sm:mb-8">Track purchases for multiple people</p>
         
         {/* Total Banner */}
         <div className="bg-gray-800 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 flex justify-between items-center shadow-md">
@@ -1022,7 +489,7 @@ export default function App() {
                   </div>
                   
                   <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0">
-                    {/* Trash icon */}
+                    {/* Trash icon - always visible on mobile as small icon */}
                     <button
                       onClick={() => showDeleteModal(person.id, person.name)}
                       className="text-gray-400 hover:text-red-500 p-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
@@ -1066,7 +533,156 @@ export default function App() {
                             </tr>
                           </thead>
                           <tbody>
-                            {person.products.map(product => renderProductRow(person, product))}
+                            {person.products.map(product => (
+                              <React.Fragment key={product.id}>
+                              <tr className="border-t border-gray-50 group">
+                                {/* Product Name */}
+                                <td className="px-4 py-3 align-top">
+                                  {editingProduct === `${person.id}-${product.id}-name` ? (
+                                    <input
+                                      type="text"
+                                      defaultValue={product.name}
+                                      onBlur={(e) => {
+                                        updateProduct(person.id, product.id, 'name', e.target.value);
+                                        setEditingProduct(null);
+                                      }}
+                                      onKeyPress={(e) => {
+                                        if (e.key === 'Enter') {
+                                          updateProduct(person.id, product.id, 'name', e.target.value);
+                                          setEditingProduct(null);
+                                        }
+                                      }}
+                                      className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:border-gray-500"
+                                      autoFocus
+                                    />
+                                  ) : (
+                                    <span 
+                                      className="text-gray-700 font-medium cursor-pointer hover:text-gray-900"
+                                      onClick={() => setEditingProduct(`${person.id}-${product.id}-name`)}
+                                      title="Click to edit"
+                                    >
+                                      {product.name}
+                                    </span>
+                                  )}
+                                </td>
+                                
+                                {/* Price */}
+                                <td className="px-4 py-3 text-right align-top">
+                                  {editingProduct === `${person.id}-${product.id}-price` ? (
+                                    <input
+                                      type="number"
+                                      defaultValue={product.price}
+                                      onBlur={(e) => {
+                                        updateProduct(person.id, product.id, 'price', e.target.value);
+                                        setEditingProduct(null);
+                                      }}
+                                      onKeyPress={(e) => {
+                                        if (e.key === 'Enter') {
+                                          updateProduct(person.id, product.id, 'price', e.target.value);
+                                          setEditingProduct(null);
+                                        }
+                                      }}
+                                      className="w-20 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:border-gray-500 text-right"
+                                      autoFocus
+                                    />
+                                  ) : (
+                                    <span 
+                                      className="text-gray-400 cursor-pointer hover:text-gray-600"
+                                      onClick={() => setEditingProduct(`${person.id}-${product.id}-price`)}
+                                      title="Click to edit"
+                                    >
+                                      ${product.price.toFixed(2)}
+                                    </span>
+                                  )}
+                                </td>
+                                
+                                {/* With Tax */}
+                                <td className="px-4 py-3 text-right text-gray-600 font-medium align-top">
+                                  ${(product.price * 1.1).toFixed(2)}
+                                </td>
+                                
+                                {/* Links */}
+                                <td className="px-4 py-3 align-top">
+                                  <div className="group/links">
+                                    {product.links.length > 0 ? (
+                                      <div className="flex flex-col gap-1">
+                                        {product.links.map((link, index) => (
+                                          <div key={index} className="flex items-center gap-1 group/link">
+                                            {editingProduct === `${person.id}-${product.id}-link-${index}` ? (
+                                              <input
+                                                type="text"
+                                                defaultValue={link}
+                                                onBlur={(e) => {
+                                                  updateLink(person.id, product.id, index, e.target.value);
+                                                  setEditingProduct(null);
+                                                }}
+                                                onKeyPress={(e) => {
+                                                  if (e.key === 'Enter') {
+                                                    updateLink(person.id, product.id, index, e.target.value);
+                                                    setEditingProduct(null);
+                                                  }
+                                                }}
+                                                className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:border-gray-500"
+                                                autoFocus
+                                              />
+                                            ) : (
+                                              <>
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-gray-800 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                                                </svg>
+                                                <a 
+                                                  href={link} 
+                                                  target="_blank"
+                                                  rel="noopener noreferrer"
+                                                  className="text-gray-500 hover:text-gray-700 hover:underline text-sm truncate max-w-40"
+                                                >
+                                                  {link.replace(/^https?:\/\//, '').substring(0, 20)}{link.replace(/^https?:\/\//, '').length > 20 ? '...' : ''}
+                                                </a>
+                                                <button
+                                                  onClick={() => setEditingProduct(`${person.id}-${product.id}-link-${index}`)}
+                                                  className="text-gray-400 hover:text-gray-600 opacity-0 group-hover/link:opacity-100 text-xs"
+                                                >
+                                                  ✎
+                                                </button>
+                                                <button
+                                                  onClick={() => deleteLink(person.id, product.id, index)}
+                                                  className="text-gray-400 hover:text-red-500 opacity-0 group-hover/link:opacity-100 text-xs"
+                                                >
+                                                  ✕
+                                                </button>
+                                              </>
+                                            )}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : null}
+                                    <button
+                                      onClick={() => addLink(person.id, product.id)}
+                                      className="text-gray-400 hover:text-gray-600 opacity-0 group-hover/links:opacity-100 transition-opacity mt-1"
+                                      title="Add link"
+                                    >
+                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                      </svg>
+                                    </button>
+                                  </div>
+                                </td>
+                                
+                                {/* Delete */}
+                                <td className="px-4 py-3 text-right align-top">
+                                  <button
+                                    onClick={() => deleteProduct(person.id, product.id)}
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-500"
+                                    title="Delete product"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                  </button>
+                                </td>
+                              </tr>
+                              </React.Fragment>
+                            ))}
                             
                             {/* New Product Input Row - Desktop */}
                             {addingProductFor === person.id && (
@@ -1110,7 +726,154 @@ export default function App() {
 
                       {/* Mobile Card View */}
                       <div className="lg:hidden">
-                        {person.products.map(product => renderProductCard(person, product))}
+                        {person.products.map(product => (
+                          <div key={product.id} className="border-t border-gray-100 p-3 group">
+                            <div className="flex justify-between items-start mb-2">
+                              {/* Product Name */}
+                              {editingProduct === `${person.id}-${product.id}-name` ? (
+                                <input
+                                  type="text"
+                                  defaultValue={product.name}
+                                  onBlur={(e) => {
+                                    updateProduct(person.id, product.id, 'name', e.target.value);
+                                    setEditingProduct(null);
+                                  }}
+                                  onKeyPress={(e) => {
+                                    if (e.key === 'Enter') {
+                                      updateProduct(person.id, product.id, 'name', e.target.value);
+                                      setEditingProduct(null);
+                                    }
+                                  }}
+                                  className="flex-1 px-2 py-2 border border-gray-300 rounded focus:outline-none focus:border-gray-500 text-base"
+                                  autoFocus
+                                />
+                              ) : (
+                                <span 
+                                  className="text-gray-700 font-medium cursor-pointer hover:text-gray-900 flex-1 text-base"
+                                  onClick={() => setEditingProduct(`${person.id}-${product.id}-name`)}
+                                >
+                                  {product.name}
+                                </span>
+                              )}
+                              
+                              {/* Delete button - always visible on mobile */}
+                              <button
+                                onClick={() => deleteProduct(person.id, product.id)}
+                                className="text-gray-400 hover:text-red-500 p-2 -mr-2"
+                                title="Delete product"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
+                            </div>
+                            
+                            {/* Price Row */}
+                            <div className="flex justify-between items-center mb-2">
+                              <div className="flex items-center gap-4">
+                                <div>
+                                  <span className="text-xs text-gray-400 block">Price</span>
+                                  {editingProduct === `${person.id}-${product.id}-price` ? (
+                                    <input
+                                      type="number"
+                                      defaultValue={product.price}
+                                      onBlur={(e) => {
+                                        updateProduct(person.id, product.id, 'price', e.target.value);
+                                        setEditingProduct(null);
+                                      }}
+                                      onKeyPress={(e) => {
+                                        if (e.key === 'Enter') {
+                                          updateProduct(person.id, product.id, 'price', e.target.value);
+                                          setEditingProduct(null);
+                                        }
+                                      }}
+                                      className="w-20 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:border-gray-500 text-base"
+                                      autoFocus
+                                    />
+                                  ) : (
+                                    <span 
+                                      className="text-gray-600 cursor-pointer hover:text-gray-800 text-base"
+                                      onClick={() => setEditingProduct(`${person.id}-${product.id}-price`)}
+                                    >
+                                      ${product.price.toFixed(2)}
+                                    </span>
+                                  )}
+                                </div>
+                                <div>
+                                  <span className="text-xs text-gray-400 block">With Tax</span>
+                                  <span className="text-gray-700 font-medium text-base">
+                                    ${(product.price * 1.1).toFixed(2)}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Links */}
+                            <div>
+                              {product.links.length > 0 && (
+                                <div className="flex flex-col gap-2 mb-2">
+                                  {product.links.map((link, index) => (
+                                    <div key={index} className="flex items-center gap-2">
+                                      {editingProduct === `${person.id}-${product.id}-link-${index}` ? (
+                                        <input
+                                          type="text"
+                                          defaultValue={link}
+                                          onBlur={(e) => {
+                                            updateLink(person.id, product.id, index, e.target.value);
+                                            setEditingProduct(null);
+                                          }}
+                                          onKeyPress={(e) => {
+                                            if (e.key === 'Enter') {
+                                              updateLink(person.id, product.id, index, e.target.value);
+                                              setEditingProduct(null);
+                                            }
+                                          }}
+                                          className="flex-1 px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:border-gray-500"
+                                          autoFocus
+                                        />
+                                      ) : (
+                                        <>
+                                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-gray-800 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                                          </svg>
+                                          <a 
+                                            href={link} 
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-gray-500 hover:text-gray-700 hover:underline text-sm truncate"
+                                          >
+                                            {link.replace(/^https?:\/\//, '').substring(0, 25)}{link.replace(/^https?:\/\//, '').length > 25 ? '...' : ''}
+                                          </a>
+                                          <button
+                                            onClick={() => setEditingProduct(`${person.id}-${product.id}-link-${index}`)}
+                                            className="text-gray-400 hover:text-gray-600 p-1 flex-shrink-0"
+                                          >
+                                            ✎
+                                          </button>
+                                          <button
+                                            onClick={() => deleteLink(person.id, product.id, index)}
+                                            className="text-gray-400 hover:text-red-500 p-1 flex-shrink-0"
+                                          >
+                                            ✕
+                                          </button>
+                                        </>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              <button
+                                onClick={() => addLink(person.id, product.id)}
+                                className="text-gray-400 hover:text-gray-600 flex items-center gap-1 text-sm py-1"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                                Add link
+                              </button>
+                            </div>
+                          </div>
+                        ))}
                         
                         {/* New Product Input - Mobile */}
                         {addingProductFor === person.id && (
